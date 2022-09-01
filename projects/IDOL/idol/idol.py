@@ -114,6 +114,13 @@ class IDOL(nn.Module):
         dec_n_points = cfg.MODEL.IDOL.DEC_N_POINTS
         num_feature_levels = cfg.MODEL.IDOL.NUM_FEATURE_LEVELS
 
+        # Batchformer
+        share_bf = cfg.MODEL.IDOL.SHARE_BF
+        bf = cfg.MODEL.BF
+        insert_idx = cfg.model.INSERT_IDX
+        bt_num_layers = cfg.model.BT_NUM_LAYERS
+        eval_bf = cfg.model.EVAL_BF
+
         # Loss parameters:
         mask_weight = cfg.MODEL.IDOL.MASK_WEIGHT
         dice_weight = cfg.MODEL.IDOL.DICE_WEIGHT
@@ -149,7 +156,12 @@ class IDOL(nn.Module):
         num_frames=self.num_frames,
         num_feature_levels=num_feature_levels,
         dec_n_points=dec_n_points,
-        enc_n_points=enc_n_points,)
+        enc_n_points=enc_n_points,
+        share_bf=share_bf,
+        bf=bf,
+        insert_idx=insert_idx,
+        bt_num_layers=bt_num_layers,
+        eval_bf=eval_bf,)
         
         
         model = DeformableDETR(

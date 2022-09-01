@@ -31,7 +31,8 @@ class DeformableTransformer(nn.Module):
                  activation="relu", return_intermediate_dec=False,
                  num_frames=1, num_feature_levels=4, 
                  dec_n_points=4,  enc_n_points=4,
-                 two_stage=False):
+                 two_stage=False, share_bf=0, bf=1, insert_idx=0,
+                 bt_num_layers=1, eval_bf=False):
         super().__init__()
 
         self.d_model = d_model
@@ -46,7 +47,23 @@ class DeformableTransformer(nn.Module):
                                                           num_feature_levels * 1, 
                                                           nhead, enc_n_points)
 
-        self.encoder = DeformableTransformerEncoder(encoder_layer, num_encoder_layers)
+        self.bf = None
+        insert_idx = []
+        if bf:
+            def generate_bf(type):
+                if type == 1:
+                    encoder = torch.nn.TransformerEncoderLayer(d_model, 4, d_model, dropout=0.5)
+                elif type >= 2:
+                    encoder = torch.nn.TransformerEncoder(torch.nn.TransformerEncoderLayer(d_model, 4, d_model, dropout=0.5), type)
+                else:
+                    encoder = torch.nn.TransformerEncoderLayer(d_model, 4, d_model, dropout=0.5)
+                return encoder
+            self.bf = generate_bf(bt_num_layers)
+            insert_idx = insert_idx
+            if not share_bf:
+                self.bf = torch.nn.ModuleList([generate_bf(bt_num_layers) if i in insert_idx else torch.nn.Identity() for i in range(0, num_encoder_layers)])
+        self.encoder = DeformableTransformerEncoder(encoder_layer, num_encoder_layers, bf=bf, bf_idx=bf, insert_idx=insert_idx,
+                                                    eval_bf=eval_bf)
 
         decoder_layer = DeformableTransformerDecoderLayer(d_model, dim_feedforward,
                                                           dropout, activation,
@@ -240,10 +257,17 @@ class DeformableTransformerEncoderLayer(nn.Module):
 
 
 class DeformableTransformerEncoder(nn.Module):
-    def __init__(self, encoder_layer, num_layers):
+    def __init__(self, encoder_layer, num_layers, bf=None, bf_idx=0, insert_idx=2, eval_bf=0):
         super().__init__()
         self.layers = _get_clones(encoder_layer, num_layers)
         self.num_layers = num_layers
+        self.insert_idx = insert_idx
+        if type(bf) != torch.nn.ModuleList and bf is not None:
+            self.bf = [bf]*num_layers
+        else:
+            self.bf = bf
+        self.bf_idx = bf_idx
+        self.eval_bf = eval_bf
 
     @staticmethod
     def get_reference_points(spatial_shapes, valid_ratios, device):
@@ -263,9 +287,24 @@ class DeformableTransformerEncoder(nn.Module):
     def forward(self, src, spatial_shapes, level_start_index, valid_ratios, pos=None, padding_mask=None):
         output = src
         reference_points = self.get_reference_points(spatial_shapes, valid_ratios, device=src.device)
-        for _, layer in enumerate(self.layers):
+        for i, layer in enumerate(self.layers):
             output = layer(output, pos, reference_points, spatial_shapes, level_start_index, padding_mask)
 
+            if i in self.insert_idx and self.bf is not None and self.bf_idx in [1] and (self.training or self.eval_bf):
+                old_output = output
+                if i != self.insert_idx[0]:
+                    old_output = output[ :len(output)//2, :, :]
+                    output = output[len(output)//2:, :, :]
+                output = self.bf[i](output)
+                if self.training:
+                    output = torch.cat([old_output, output], dim=0)
+                if i == self.insert_idx[0] and self.training:
+                    pos = torch.cat([pos, pos], dim=0)
+                    reference_points = torch.cat([reference_points, reference_points], dim=0)
+                    padding_mask = torch.cat([padding_mask, padding_mask], dim=0)
+            elif i in self.insert_idx and self.bf is not None and self.bf_idx == 7 and self.training:
+                # single stream
+                output = self.bf[i](output)
         return output
 
 

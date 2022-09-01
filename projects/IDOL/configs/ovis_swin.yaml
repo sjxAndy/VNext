@@ -19,6 +19,9 @@ MODEL:
     NUM_CLASSES: 25
     MULTI_CLS_ON: True
     MERGE_ON_CPU: True
+    SHARE_BF: 0
+    BF: 1
+    INSERT_IDX: 0
 DATASETS:
   TRAIN: ("ytvis_ovis_train",)
   TEST: ("ytvis_ovis_val",)
