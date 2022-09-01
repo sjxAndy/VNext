@@ -116,10 +116,10 @@ class IDOL(nn.Module):
 
         # Batchformer
         share_bf = cfg.MODEL.IDOL.SHARE_BF
-        bf = cfg.MODEL.BF
-        insert_idx = cfg.model.INSERT_IDX
-        bt_num_layers = cfg.model.BT_NUM_LAYERS
-        eval_bf = cfg.model.EVAL_BF
+        bf = cfg.MODEL.IDOL.BF
+        insert_idx = cfg.MODEL.IDOL.INSERT_IDX
+        bt_num_layers = cfg.MODEL.IDOL.BT_NUM_LAYERS
+        eval_bf = cfg.MODEL.IDOL.EVAL_BF
 
         # Loss parameters:
         mask_weight = cfg.MODEL.IDOL.MASK_WEIGHT

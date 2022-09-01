@@ -62,6 +62,13 @@ def add_idol_config(cfg):
     cfg.MODEL.IDOL.MEMORY_LEN = 3
     cfg.MODEL.IDOL.BATCH_INFER_LEN = 10
 
+    # Batchformer
+    cfg.MODEL.IDOL.SHARE_BF = 0
+    cfg.MODEL.IDOL.BF = 1
+    cfg.MODEL.IDOL.INSERT_IDX = 0
+    cfg.MODEL.IDOL.BT_NUM_LAYERS = 1
+    cfg.MODEL.IDOL.EVAL_BF = False
+
     cfg.SOLVER.OPTIMIZER = "ADAMW"
     cfg.SOLVER.BACKBONE_MULTIPLIER = 0.1
 
