@@ -361,6 +361,9 @@ class SetCriterion(nn.Module):
         # tgt_idx = self._get_tgt_permutation_idx(indices)
 
         src_masks = outputs["pred_masks"]
+        # if len(src_masks) != len(targets):
+        #     targets = targets + targets
+        #     ref_target = ref_target + ref_target
         if type(src_masks) == list:
             src_masks = torch.cat(src_masks, dim=1)[0]
         key_frame_masks = [t["masks"] for t in targets]

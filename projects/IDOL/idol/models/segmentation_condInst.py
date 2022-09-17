@@ -217,20 +217,23 @@ class CondInst_segm(nn.Module):
         # outputs['pred_samples'] = inter_samples[-1]
         
         outputs['pred_logits'] = outputs_class[-1]
-        if len(outputs['pred_logits']) != len(contrast_items):
-            outputs['pred_logits'] = outputs['pred_logits'] + outputs['pred_logits']
+        # if len(outputs['pred_logits']) != len(contrast_items):
+        #     outputs['pred_logits'] = outputs['pred_logits'] + outputs['pred_logits']
         outputs['pred_boxes'] = outputs_coord[-1]
-        if len(outputs['pred_boxes']) != len(contrast_items):
-            outputs['pred_boxes'] = outputs['pred_boxes'] + outputs['pred_boxes']
+        # if len(outputs['pred_boxes']) != len(contrast_items):
+        #     outputs['pred_boxes'] = outputs['pred_boxes'] + outputs['pred_boxes']
         outputs['pred_masks'] = outputs_mask[-1]
-        if len(outputs['pred_masks']) != len(contrast_items):
-            outputs['pred_masks'] = outputs['pred_masks'] + outputs['pred_masks']
+        # if len(outputs['pred_masks']) != len(contrast_items):
+        #     outputs['pred_masks'] = outputs['pred_masks'] + outputs['pred_masks']
         outputs['pred_qd'] = contrast_items
 
         if self.detr.aux_loss:
             outputs['aux_outputs'] = self._set_aux_loss(outputs_class, outputs_coord, outputs_mask)
 
         if train:
+            if len(contrast_items) != len(det_targets):
+                det_targets = det_targets + det_targets
+                ref_targets = ref_targets + ref_targets
             loss_dict = criterion(outputs, det_targets,ref_targets, indices_list)
         else:
             loss_dict = None
