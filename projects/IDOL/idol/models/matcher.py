@@ -52,6 +52,8 @@ class HungarianMatcher(nn.Module):
             out_bbox = outputs["pred_boxes"]  
             indices = []
             matched_ids = []
+            if bs != len(targets):
+                targets = targets + targets
             assert bs == len(targets) 
             for batch_idx in range(bs):
                 bz_boxes = out_bbox[batch_idx] #[300,4]

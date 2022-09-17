@@ -17,6 +17,9 @@ def select_pos_neg(ref_box, all_indices, targets, det_targets, embed_head, hs_ke
     one = torch.tensor(1).to(ref_embeds)
     zero = torch.tensor(0).to(ref_embeds)
     contrast_items = []
+    if len(targets) != len(all_indices):
+        targets = targets + targets
+        det_targets = det_targets + det_targets
     assert len(targets) == len(all_indices)
     # l2_items = []
     for bz_i,(v,detv, indices) in enumerate(zip(targets,det_targets,all_indices)):

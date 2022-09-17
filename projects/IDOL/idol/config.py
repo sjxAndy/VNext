@@ -65,7 +65,7 @@ def add_idol_config(cfg):
     # Batchformer
     cfg.MODEL.IDOL.SHARE_BF = 0
     cfg.MODEL.IDOL.BF = 1
-    cfg.MODEL.IDOL.INSERT_IDX = 0
+    cfg.MODEL.IDOL.INSERT_IDX = [0]
     cfg.MODEL.IDOL.BT_NUM_LAYERS = 1
     cfg.MODEL.IDOL.EVAL_BF = False
 

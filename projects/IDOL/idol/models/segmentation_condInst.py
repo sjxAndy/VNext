@@ -176,6 +176,7 @@ class CondInst_segm(nn.Module):
             indices, matched_ids = criterion.matcher(outputs_layer, det_targets)
             indices_list.append(indices)
             
+            new_image_sizes = image_sizes + image_sizes if len(indices) != len(image_sizes) else image_sizes
             reference_points, mask_head_params, num_insts = [], [], []
             for i, indice in enumerate(indices):
                 pred_i, tgt_j = indice
@@ -185,7 +186,7 @@ class CondInst_segm(nn.Module):
 
                 # This is the image size after data augmentation (so as the gt boxes & masks)
                 
-                orig_h, orig_w = image_sizes[i]
+                orig_h, orig_w = new_image_sizes[i]
                 orig_h = torch.as_tensor(orig_h).to(reference)
                 orig_w = torch.as_tensor(orig_w).to(reference)
                 scale_f = torch.stack([orig_w, orig_h], dim=0)
@@ -216,8 +217,14 @@ class CondInst_segm(nn.Module):
         # outputs['pred_samples'] = inter_samples[-1]
         
         outputs['pred_logits'] = outputs_class[-1]
+        if len(outputs['pred_logits']) != len(contrast_items):
+            outputs['pred_logits'] = outputs['pred_logits'] + outputs['pred_logits']
         outputs['pred_boxes'] = outputs_coord[-1]
+        if len(outputs['pred_boxes']) != len(contrast_items):
+            outputs['pred_boxes'] = outputs['pred_boxes'] + outputs['pred_boxes']
         outputs['pred_masks'] = outputs_mask[-1]
+        if len(outputs['pred_masks']) != len(contrast_items):
+            outputs['pred_masks'] = outputs['pred_masks'] + outputs['pred_masks']
         outputs['pred_qd'] = contrast_items
 
         if self.detr.aux_loss:

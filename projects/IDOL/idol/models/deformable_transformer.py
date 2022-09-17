@@ -31,7 +31,7 @@ class DeformableTransformer(nn.Module):
                  activation="relu", return_intermediate_dec=False,
                  num_frames=1, num_feature_levels=4, 
                  dec_n_points=4,  enc_n_points=4,
-                 two_stage=False, share_bf=0, bf=1, insert_idx=0,
+                 two_stage=False, share_bf=0, bf=1, insert_idx=[0],
                  bt_num_layers=1, eval_bf=False):
         super().__init__()
 
@@ -48,6 +48,7 @@ class DeformableTransformer(nn.Module):
                                                           nhead, enc_n_points)
 
         self.bf = None
+        self.insert_idx = insert_idx
         insert_idx = []
         if bf:
             def generate_bf(type):
@@ -59,10 +60,10 @@ class DeformableTransformer(nn.Module):
                     encoder = torch.nn.TransformerEncoderLayer(d_model, 4, d_model, dropout=0.5)
                 return encoder
             self.bf = generate_bf(bt_num_layers)
-            insert_idx = insert_idx
+            insert_idx = self.insert_idx
             if not share_bf:
                 self.bf = torch.nn.ModuleList([generate_bf(bt_num_layers) if i in insert_idx else torch.nn.Identity() for i in range(0, num_encoder_layers)])
-        self.encoder = DeformableTransformerEncoder(encoder_layer, num_encoder_layers, bf=bf, bf_idx=bf, insert_idx=insert_idx,
+        self.encoder = DeformableTransformerEncoder(encoder_layer, num_encoder_layers, bf=self.bf, bf_idx=bf, insert_idx=insert_idx,
                                                     eval_bf=eval_bf)
 
         decoder_layer = DeformableTransformerDecoderLayer(d_model, dim_feedforward,
@@ -257,7 +258,7 @@ class DeformableTransformerEncoderLayer(nn.Module):
 
 
 class DeformableTransformerEncoder(nn.Module):
-    def __init__(self, encoder_layer, num_layers, bf=None, bf_idx=0, insert_idx=2, eval_bf=0):
+    def __init__(self, encoder_layer, num_layers, bf=None, bf_idx=0, insert_idx=[0], eval_bf=0):
         super().__init__()
         self.layers = _get_clones(encoder_layer, num_layers)
         self.num_layers = num_layers
